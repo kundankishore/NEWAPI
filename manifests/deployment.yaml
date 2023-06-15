@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aws-new
+  labels:
+    app: aws-new
+  namespace: namespace-workflow-1686850144631
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aws-new
+  template:
+    metadata:
+      labels:
+        app: aws-new
+    spec:
+      containers:
+        - name: aws-new
+          image: acrworkflow1686850144631.azurecr.io/image-workflow-1686850144631:latest
+          ports:
+            - containerPort: 5000
