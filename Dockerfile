@@ -2,13 +2,16 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS builder
 WORKDIR /app
 
 # caches restore result by copying csproj file separately
-COPY *.csproj .
-RUN dotnet restore
+WORKDIR /src
+COPY ["NEWAPI/NEWAPI.csproj", "NEWAPI/"]
+RUN dotnet restore "NEWAPI/NEWAPI.csproj"
 
 COPY . .
-RUN dotnet publish --output /app/ --configuration Release --no-restore
-RUN sed -n 's:.*<AssemblyName>\(.*\)</AssemblyName>.*:\1:p' *.csproj > __assemblyname
-RUN if [ ! -s __assemblyname ]; then filename=$(ls *.csproj); echo ${filename%.*} > __assemblyname; fi
+WORKDIR "/src/NEWAPI"
+RUN dotnet build "NEWAPI.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "NEWAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
