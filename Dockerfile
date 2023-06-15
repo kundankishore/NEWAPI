@@ -17,5 +17,7 @@ RUN dotnet publish "NEWAPI.csproj" -c Release -o /app/publish /p:UseAppHost=fals
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "NEWAPI.dll"]
+ENV PORT 5000
+EXPOSE 5000
+
+ENTRYPOINT dotnet $(cat /app/__assemblyname).dll --urls "http://*:5000"
