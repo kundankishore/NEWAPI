@@ -19,4 +19,4 @@ spec:
         - name: aws-new
           image: acrworkflow1686853237342.azurecr.io/image-workflow-1686853237342:latest
           ports:
-            - containerPort: 5000
+            - containerPort: 80
