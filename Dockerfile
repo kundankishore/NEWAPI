@@ -1,21 +1,21 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS builder
+#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
+EXPOSE 80
 
-# caches restore result by copying csproj file separately
-COPY *.csproj .
-RUN dotnet restore
-
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /src
+COPY ["NEWAPI/NEWAPI.csproj", "NEWAPI/"]
+RUN dotnet restore "NEWAPI/NEWAPI.csproj"
 COPY . .
-RUN dotnet publish --output /app/ --configuration Release --no-restore
-RUN sed -n 's:.*<AssemblyName>\(.*\)</AssemblyName>.*:\1:p' *.csproj > __assemblyname
-RUN if [ ! -s __assemblyname ]; then filename=$(ls *.csproj); echo ${filename%.*} > __assemblyname; fi
+WORKDIR "/src/NEWAPI"
+RUN dotnet build "NEWAPI.csproj" -c Release -o /app/build
 
-# Stage 2
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+FROM build AS publish
+RUN dotnet publish "NEWAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
 WORKDIR /app
-COPY --from=builder /app .
-
-ENV PORT 5000
-EXPOSE 5000
-
-ENTRYPOINT dotnet $(cat /app/__assemblyname).dll --urls "http://*:5000"
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "NEWAPI.dll"]
